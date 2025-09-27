@@ -1,7 +1,8 @@
 from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
 from flask_login import login_required, current_user
-from models import Session, User, Agenda
-from app import db
+from models import Session, User, Agenda, Document, Certificate, EmailTemplate, QRCode, ChangeRequest, Notification
+from extensions import db
+from email_service import send_session_notification, send_reminder_email
 from datetime import datetime, timedelta
 
 manager = Blueprint('manager', __name__)
@@ -53,8 +54,12 @@ def handle_submission(id, action):
     if action != 'view':
         session.status = action
         db.session.commit()
-    
-        # TODO: Send email notification to speaker
+        
+        # Send email notification to speaker
+        if action == 'approved':
+            send_session_notification(session.id, 'session_confirmation')
+        elif action == 'rejected':
+            send_session_notification(session.id, 'session_rejection')
         
         return jsonify({
             'success': True,
@@ -162,4 +167,157 @@ def update_agenda():
             'timeslot': session.timeslot,
             'track': session.track
         }
+    })
+
+@manager.route('/change-requests', methods=['GET'])
+@login_required
+def get_change_requests():
+    if current_user.role != 'manager':
+        return jsonify({'success': False, 'message': 'Access denied'}), 403
+    
+    requests = ChangeRequest.query.filter_by(status='pending').all()
+    
+    return jsonify({
+        'success': True,
+        'change_requests': [{
+            'id': req.id,
+            'session_id': req.session_id,
+            'session_title': req.session.title,
+            'request_type': req.request_type,
+            'old_value': req.old_value,
+            'new_value': req.new_value,
+            'requested_at': req.requested_at.isoformat(),
+            'speaker_name': req.session.speaker.full_name
+        } for req in requests]
+    })
+
+@manager.route('/change-requests/<int:request_id>/<action>', methods=['POST'])
+@login_required
+def handle_change_request(request_id, action):
+    if current_user.role != 'manager':
+        return jsonify({'success': False, 'message': 'Access denied'}), 403
+    
+    if action not in ['approve', 'reject']:
+        return jsonify({'success': False, 'message': 'Invalid action'}), 400
+    
+    change_request = ChangeRequest.query.get_or_404(request_id)
+    session = Session.query.get(change_request.session_id)
+    
+    if action == 'approve':
+        # Apply the change
+        if change_request.request_type == 'title':
+            session.title = change_request.new_value
+        elif change_request.request_type == 'abstract':
+            session.abstract = change_request.new_value
+        elif change_request.request_type == 'category':
+            session.category = change_request.new_value
+        
+        change_request.status = 'approved'
+        change_request.processed_at = datetime.utcnow()
+        change_request.processed_by = current_user.id
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Change request approved and applied',
+            'change_request': {
+                'id': change_request.id,
+                'status': change_request.status
+            }
+        })
+    else:
+        change_request.status = 'rejected'
+        change_request.processed_at = datetime.utcnow()
+        change_request.processed_by = current_user.id
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Change request rejected',
+            'change_request': {
+                'id': change_request.id,
+                'status': change_request.status
+            }
+        })
+
+@manager.route('/agenda/publish', methods=['POST'])
+@login_required
+def publish_agenda():
+    if current_user.role != 'manager':
+        return jsonify({'success': False, 'message': 'Access denied'}), 403
+    
+    # Mark agenda as published
+    agenda_items = Agenda.query.all()
+    for item in agenda_items:
+        item.is_published = True
+    
+    db.session.commit()
+    
+    return jsonify({
+        'success': True,
+        'message': 'Agenda published successfully'
+    })
+
+@manager.route('/certificates/generate', methods=['POST'])
+@login_required
+def generate_certificates():
+    if current_user.role != 'manager':
+        return jsonify({'success': False, 'message': 'Access denied'}), 403
+    
+    # Get all approved sessions
+    approved_sessions = Session.query.filter_by(status='approved').all()
+    
+    certificates_created = 0
+    for session in approved_sessions:
+        # Check if certificate already exists
+        existing_cert = Certificate.query.filter_by(
+            speaker_id=session.speaker_id,
+            session_id=session.id
+        ).first()
+        
+        if not existing_cert:
+            certificate = Certificate(
+                speaker_id=session.speaker_id,
+                session_id=session.id,
+                certificate_type='speaker',
+                image_path=f"certificates/speaker_{session.speaker_id}_{session.id}.png"
+            )
+            db.session.add(certificate)
+            certificates_created += 1
+    
+    db.session.commit()
+    
+    return jsonify({
+        'success': True,
+        'message': f'{certificates_created} certificates generated successfully'
+    })
+
+@manager.route('/reminders/send', methods=['POST'])
+@login_required
+def send_reminders():
+    if current_user.role != 'manager':
+        return jsonify({'success': False, 'message': 'Access denied'}), 403
+    
+    data = request.get_json()
+    reminder_type = data.get('type')
+    user_ids = data.get('user_ids', [])
+    
+    if not user_ids:
+        # Send to all speakers
+        speakers = User.query.filter_by(role='speaker').all()
+        user_ids = [speaker.id for speaker in speakers]
+    
+    sent_count = 0
+    for user_id in user_ids:
+        user = User.query.get(user_id)
+        if user:
+            reminder_details = data.get('details', 'Please check your dashboard for updates.')
+            if send_reminder_email(user_id, reminder_type, reminder_details):
+                sent_count += 1
+    
+    return jsonify({
+        'success': True,
+        'message': f'Reminders sent to {sent_count} users'
     })

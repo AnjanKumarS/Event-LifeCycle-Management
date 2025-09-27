@@ -9,49 +9,87 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- AOS Animation Library -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <!-- Swiper CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
     {% block extra_css %}{% endblock %}
 </head>
 
-<body class="font-[Poppins] bg-gray-50">
+<body class="font-[Poppins] overflow-x-hidden custom-scrollbar">
+    <!-- Video Background -->
+    <div class="fixed inset-0 z-0 overflow-hidden">
+        <video autoplay muted loop class="absolute min-w-full min-h-full object-cover">
+            <source src="{{ url_for('static', filename='videos/background.mp4') }}" type="video/mp4">
+        </video>
+        <div class="absolute inset-0 bg-gradient-to-b from-black/50 to-black/30 backdrop-blur-sm"></div>
+    </div>
+
+    <!-- Particle Background -->
+    <div id="particles-js" class="fixed inset-0 z-10 pointer-events-none"></div>
+
     <!-- Navigation -->
-    <nav class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-lg">
+    <nav
+        class="fixed w-full top-0 z-50 transition-all duration-300 bg-gradient-to-b from-black/80 to-transparent backdrop-blur-sm border-b border-white/10">
         <div class="container mx-auto px-4">
             <div class="flex justify-between items-center py-4">
                 <div class="flex items-center space-x-4">
                     <a href="{{ url_for('index') }}"
-                        class="text-2xl font-bold hover:text-blue-200 transition duration-300">
-                        <i class="fas fa-microphone-alt mr-2"></i>Speaker Persona
+                        class="text-2xl font-bold hover:text-indigo-200 transition-all duration-300 transform hover:scale-105">
+                        <div class="flex items-center space-x-3">
+                            <div class="bg-white/10 rounded-lg p-2 backdrop-blur-sm">
+                                <i class="fas fa-microphone-alt text-white"></i>
+                            </div>
+                            <span>Speaker Persona</span>
+                        </div>
                     </a>
                 </div>
                 <div class="hidden md:flex items-center space-x-6">
                     {% if current_user.is_authenticated %}
                     {% if current_user.role == 'speaker' %}
-                    <a href="{{ url_for('speaker.dashboard') }}" class="hover:text-blue-200 transition duration-300">
-                        <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                    <a href="{{ url_for('speaker.dashboard') }}"
+                        class="group flex items-center space-x-2 hover:text-indigo-200 transition-all duration-300">
+                        <div class="bg-white/10 rounded-full p-2 group-hover:bg-white/20 transition-all duration-300">
+                            <i class="fas fa-tachometer-alt"></i>
+                        </div>
+                        <span>Dashboard</span>
                     </a>
                     {% else %}
-                    <a href="{{ url_for('manager.dashboard') }}" class="hover:text-blue-200 transition duration-300">
-                        <i class="fas fa-tasks mr-2"></i>Manager Dashboard
+                    <a href="{{ url_for('manager.dashboard') }}"
+                        class="group flex items-center space-x-2 hover:text-indigo-200 transition-all duration-300">
+                        <div class="bg-white/10 rounded-full p-2 group-hover:bg-white/20 transition-all duration-300">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <span>Manager Dashboard</span>
                     </a>
                     {% endif %}
                     <a href="{{ url_for('auth.logout') }}"
-                        class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg transition duration-300">
-                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                        class="flex items-center space-x-2 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 px-4 py-2 rounded-full transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
                     </a>
                     {% else %}
-                    <a href="{{ url_for('auth.login') }}" class="hover:text-blue-200 transition duration-300">
-                        <i class="fas fa-sign-in-alt mr-2"></i>Login
+                    <a href="{{ url_for('auth.login') }}"
+                        class="group flex items-center space-x-2 hover:text-indigo-200 transition-all duration-300">
+                        <div class="bg-white/10 rounded-full p-2 group-hover:bg-white/20 transition-all duration-300">
+                            <i class="fas fa-sign-in-alt"></i>
+                        </div>
+                        <span>Login</span>
                     </a>
                     <a href="{{ url_for('auth.register') }}"
-                        class="bg-white text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-lg transition duration-300">
-                        <i class="fas fa-user-plus mr-2"></i>Register
+                        class="flex items-center space-x-2 bg-white text-indigo-600 hover:bg-indigo-50 px-6 py-2 rounded-full transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Register</span>
                     </a>
                     {% endif %}
                 </div>
@@ -94,21 +132,38 @@
     <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-    <div class="container mx-auto px-4 mt-4">
+    <div class="fixed top-4 right-4 z-50 space-y-4 min-w-[300px] max-w-md">
         {% for category, message in messages %}
         <div
-            class="alert alert-{{ category }} bg-{{ category == 'error' and 'red' or 'green' }}-100 border-l-4 border-{{ category == 'error' and 'red' or 'green' }}-500 text-{{ category == 'error' and 'red' or 'green' }}-700 p-4 mb-4">
-            <div class="flex">
-                <div class="flex-shrink-0">
-                    {% if category == 'error' %}
-                    <i class="fas fa-exclamation-circle"></i>
-                    {% else %}
-                    <i class="fas fa-check-circle"></i>
-                    {% endif %}
+            class="alert-{{ category }} transform transition-all duration-300 animate-fade-in-down bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="p-4">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        {% if category == 'error' %}
+                        <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
+                            <i class="fas fa-exclamation-circle text-red-500"></i>
+                        </div>
+                        {% else %}
+                        <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                            <i class="fas fa-check-circle text-green-500"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="ml-3 w-0 flex-1">
+                        <p class="text-sm font-medium text-gray-900">
+                            {{ message }}
+                        </p>
+                    </div>
+                    <div class="ml-4 flex-shrink-0 flex">
+                        <button class="rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none">
+                            <span class="sr-only">Close</span>
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
                 </div>
-                <div class="ml-3">
-                    <p class="text-sm">{{ message }}</p>
-                </div>
+            </div>
+            <div
+                class="animate-progress h-1 bg-gradient-to-r {% if category == 'error' %}from-red-500 to-pink-500{% else %}from-green-500 to-emerald-500{% endif %}">
             </div>
         </div>
         {% endfor %}
@@ -117,12 +172,14 @@
     {% endwith %}
 
     <!-- Main Content -->
-    <main class="container mx-auto px-4 py-8">
-        {% block content %}{% endblock %}
+    <main class="relative z-20 min-h-screen pt-20">
+        <div class="container mx-auto px-4 py-8">
+            {% block content %}{% endblock %}
+        </div>
     </main>
 
     <!-- Footer -->
-    <footer class="bg-gray-800 text-white mt-12">
+    <footer class="relative z-20 bg-gradient-to-b from-gray-900 to-black text-white mt-12 border-t border-white/10">
         <div class="container mx-auto px-4 py-8">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div>
@@ -164,17 +221,116 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script>
-        // Mobile menu toggle
-        document.getElementById('mobile-menu-button').addEventListener('click', function () {
-            document.getElementById('mobile-menu').classList.toggle('hidden');
+        // Initialize AOS animations
+        AOS.init({
+            duration: 800,
+            easing: 'ease-in-out',
+            once: true,
+            mirror: false
         });
 
-        // Auto-hide flash messages
-        setTimeout(function () {
-            $('.alert').fadeOut('slow');
-        }, 5000);
+        // Initialize Particles.js
+        particlesJS("particles-js", {
+            particles: {
+                number: { value: 80, density: { enable: true, value_area: 800 } },
+                color: { value: "#ffffff" },
+                shape: { type: "circle" },
+                opacity: {
+                    value: 0.5,
+                    random: false,
+                    animation: { enable: true, speed: 1, opacity_min: 0.1, sync: false }
+                },
+                size: {
+                    value: 3,
+                    random: true,
+                    animation: { enable: true, speed: 2, size_min: 0.1, sync: false }
+                },
+                line_linked: {
+                    enable: true,
+                    distance: 150,
+                    color: "#ffffff",
+                    opacity: 0.4,
+                    width: 1
+                },
+                move: {
+                    enable: true,
+                    speed: 2,
+                    direction: "none",
+                    random: false,
+                    straight: false,
+                    out_mode: "out",
+                    bounce: false,
+                }
+            },
+            interactivity: {
+                detect_on: "canvas",
+                events: {
+                    onhover: { enable: true, mode: "repulse" },
+                    onclick: { enable: true, mode: "push" },
+                    resize: true
+                },
+            },
+            retina_detect: true
+        });
+
+        // Mobile menu toggle with animation
+        document.getElementById('mobile-menu-button').addEventListener('click', function () {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+            if (!mobileMenu.classList.contains('hidden')) {
+                mobileMenu.style.height = '0px';
+                mobileMenu.style.display = 'block';
+                const height = mobileMenu.scrollHeight + 'px';
+                mobileMenu.style.height = height;
+            } else {
+                mobileMenu.style.height = '0px';
+                setTimeout(() => {
+                    mobileMenu.style.display = 'none';
+                }, 300);
+            }
+        });
+
+        // Navbar scroll effect
+        window.addEventListener('scroll', function () {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 100) {
+                nav.classList.add('bg-opacity-90', 'backdrop-blur-lg');
+                nav.classList.add('shadow-2xl');
+            } else {
+                nav.classList.remove('bg-opacity-90', 'backdrop-blur-lg');
+                nav.classList.remove('shadow-2xl');
+            }
+        });
+
+        // Animate flash messages
+        const flashMessages = document.querySelectorAll('.alert');
+        flashMessages.forEach(message => {
+            message.style.transform = 'translateX(100%)';
+            message.style.opacity = '0';
+
+            requestAnimationFrame(() => {
+                message.style.transition = 'all 0.5s ease-out';
+                message.style.transform = 'translateX(0)';
+                message.style.opacity = '1';
+            });
+
+            setTimeout(() => {
+                message.style.transform = 'translateX(100%)';
+                message.style.opacity = '0';
+                setTimeout(() => message.remove(), 500);
+            }, 5000);
+        });
+
+        // Initialize Bootstrap tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
     </script>
     {% block extra_js %}{% endblock %}
 </body>

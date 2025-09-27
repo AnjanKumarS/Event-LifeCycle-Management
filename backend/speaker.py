@@ -1,16 +1,53 @@
 import os
-from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for, current_app
+import qrcode
+from io import BytesIO
+import base64
+from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for, current_app, send_file
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from datetime import datetime
-from models import Session, Document, Certificate
-from app import db
+from models import Session, Document, Certificate, QRCode, ChangeRequest, Notification
+from extensions import db
 
 speaker = Blueprint('speaker', __name__)
 
 def allowed_file(filename):
     ALLOWED_EXTENSIONS = {'pdf', 'ppt', 'pptx', 'doc', 'docx', 'zip'}
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def generate_qr_code(user_id, qr_type):
+    """Generate QR code for user"""
+    qr_data = f"{qr_type}_{user_id}_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+    
+    # Create QR code
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(qr_data)
+    qr.make(fit=True)
+    
+    # Create image
+    img = qr.make_image(fill_color="black", back_color="white")
+    
+    # Save to file
+    filename = f"{qr_type}_{user_id}.png"
+    filepath = os.path.join(current_app.static_folder, 'qrcodes', filename)
+    img.save(filepath)
+    
+    # Save to database
+    qr_record = QRCode(
+        user_id=user_id,
+        qr_type=qr_type,
+        qr_data=qr_data,
+        image_path=f"qrcodes/{filename}"
+    )
+    db.session.add(qr_record)
+    db.session.commit()
+    
+    return filepath, qr_data
 
 @speaker.route('/dashboard')
 @login_required
@@ -176,4 +213,136 @@ def delete_document(document_id):
     return jsonify({
         'success': True,
         'message': 'Document deleted successfully'
+    })
+
+@speaker.route('/qrcodes/generate', methods=['POST'])
+@login_required
+def generate_qr_codes():
+    if current_user.role != 'speaker':
+        return jsonify({'success': False, 'message': 'Access denied'}), 403
+    
+    try:
+        # Generate check-in QR code
+        checkin_path, checkin_data = generate_qr_code(current_user.id, 'checkin')
+        
+        # Generate t-shirt QR code
+        tshirt_path, tshirt_data = generate_qr_code(current_user.id, 'tshirt')
+        
+        return jsonify({
+            'success': True,
+            'message': 'QR codes generated successfully',
+            'qr_codes': {
+                'checkin': {
+                    'path': f"static/qrcodes/checkin_{current_user.id}.png",
+                    'data': checkin_data
+                },
+                'tshirt': {
+                    'path': f"static/qrcodes/tshirt_{current_user.id}.png",
+                    'data': tshirt_data
+                }
+            }
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error generating QR codes: {str(e)}'}), 500
+
+@speaker.route('/qrcodes/<qr_type>')
+@login_required
+def get_qr_code(qr_type):
+    if current_user.role != 'speaker':
+        return jsonify({'success': False, 'message': 'Access denied'}), 403
+    
+    if qr_type not in ['checkin', 'tshirt']:
+        return jsonify({'success': False, 'message': 'Invalid QR code type'}), 400
+    
+    # Check if QR code exists in database
+    qr_record = QRCode.query.filter_by(user_id=current_user.id, qr_type=qr_type).first()
+    
+    if not qr_record:
+        # Generate new QR code
+        try:
+            filepath, qr_data = generate_qr_code(current_user.id, qr_type)
+            return send_file(filepath, mimetype='image/png')
+        except Exception as e:
+            return jsonify({'success': False, 'message': f'Error generating QR code: {str(e)}'}), 500
+    
+    # Return existing QR code
+    filepath = os.path.join(current_app.static_folder, qr_record.image_path)
+    if os.path.exists(filepath):
+        return send_file(filepath, mimetype='image/png')
+    else:
+        # Regenerate if file doesn't exist
+        try:
+            filepath, qr_data = generate_qr_code(current_user.id, qr_type)
+            return send_file(filepath, mimetype='image/png')
+        except Exception as e:
+            return jsonify({'success': False, 'message': f'Error generating QR code: {str(e)}'}), 500
+
+@speaker.route('/sessions/<int:session_id>/confirm', methods=['POST'])
+@login_required
+def confirm_session(session_id):
+    if current_user.role != 'speaker':
+        return jsonify({'success': False, 'message': 'Access denied'}), 403
+    
+    session = Session.query.get_or_404(session_id)
+    if session.speaker_id != current_user.id:
+        return jsonify({'success': False, 'message': 'Access denied'}), 403
+    
+    data = request.get_json()
+    confirmation_status = data.get('status', 'confirmed')
+    
+    if confirmation_status not in ['confirmed', 'declined']:
+        return jsonify({'success': False, 'message': 'Invalid confirmation status'}), 400
+    
+    session.confirmation_status = confirmation_status
+    db.session.commit()
+    
+    return jsonify({
+        'success': True,
+        'message': f'Session {confirmation_status} successfully',
+        'session': {
+            'id': session.id,
+            'confirmation_status': session.confirmation_status
+        }
+    })
+
+@speaker.route('/change-requests', methods=['POST'])
+@login_required
+def submit_change_request():
+    if current_user.role != 'speaker':
+        return jsonify({'success': False, 'message': 'Access denied'}), 403
+    
+    data = request.get_json()
+    session_id = data.get('session_id')
+    request_type = data.get('request_type')
+    new_value = data.get('new_value')
+    
+    if not all([session_id, request_type, new_value]):
+        return jsonify({'success': False, 'message': 'Missing required fields'}), 400
+    
+    session = Session.query.get_or_404(session_id)
+    if session.speaker_id != current_user.id:
+        return jsonify({'success': False, 'message': 'Access denied'}), 403
+    
+    # Get old value based on request type
+    old_value = getattr(session, request_type, '')
+    
+    # Create change request
+    change_request = ChangeRequest(
+        session_id=session_id,
+        request_type=request_type,
+        old_value=old_value,
+        new_value=new_value
+    )
+    
+    db.session.add(change_request)
+    db.session.commit()
+    
+    return jsonify({
+        'success': True,
+        'message': 'Change request submitted successfully',
+        'change_request': {
+            'id': change_request.id,
+            'request_type': change_request.request_type,
+            'status': change_request.status
+        }
     })
