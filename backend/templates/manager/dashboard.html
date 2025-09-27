@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+
+{% block title %}Event Manager Dashboard{% endblock %}
+
+{% block content %}
+<div class="bg-gray-50 min-h-screen">
+    <!-- Top Stats Bar -->
+    <div class="bg-white shadow-sm">
+        <div class="container mx-auto px-4 py-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 text-white">
+                    <div class="flex items-center">
+                        <div class="rounded-full bg-blue-400 bg-opacity-30 p-3">
+                            <i class="fas fa-file-alt text-2xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h4 class="text-lg font-semibold">Total Submissions</h4>
+                            <p class="text-2xl font-bold">{{ submissions|length }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-4 text-white">
+                    <div class="flex items-center">
+                        <div class="rounded-full bg-green-400 bg-opacity-30 p-3">
+                            <i class="fas fa-check-circle text-2xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h4 class="text-lg font-semibold">Approved</h4>
+                            <p class="text-2xl font-bold">{{ submissions|selectattr('status', 'equalto',
+                                'approved')|list|length }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-lg p-4 text-white">
+                    <div class="flex items-center">
+                        <div class="rounded-full bg-yellow-400 bg-opacity-30 p-3">
+                            <i class="fas fa-users text-2xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h4 class="text-lg font-semibold">Speakers</h4>
+                            <p class="text-2xl font-bold">{{ speakers|length }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-4 text-white">
+                    <div class="flex items-center">
+                        <div class="rounded-full bg-purple-400 bg-opacity-30 p-3">
+                            <i class="fas fa-calendar-check text-2xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h4 class="text-lg font-semibold">Scheduled</h4>
+                            <p class="text-2xl font-bold">{{ submissions|selectattr('timeslot')|list|length }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8">
+        <div class="flex flex-col md:flex-row gap-6">
+            <!-- Sidebar -->
+            <div class="w-full md:w-64 bg-white rounded-lg shadow-sm">
+                <div class="p-4">
+                    <div class="flex items-center space-x-4 mb-6">
+                        <div class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center">
+                            <i class="fas fa-user-tie text-indigo-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800">{{ current_user.full_name }}</h3>
+                            <p class="text-sm text-gray-500">Event Manager</p>
+                        </div>
+                    </div>
+                    <nav class="space-y-2">
+                        <a href="#submissions"
+                            class="flex items-center space-x-3 px-4 py-3 rounded-lg bg-blue-50 text-blue-600">
+                            <i class="fas fa-file-alt"></i>
+                            <span>Submissions</span>
+                        </a>
+                        <a href="#agenda"
+                            class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-600 transition-colors">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Agenda Builder</span>
+                        </a>
+                        <a href="#communications"
+                            class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-600 transition-colors">
+                            <i class="fas fa-envelope"></i>
+                            <span>Communications</span>
+                        </a>
+                        <a href="#speakers"
+                            class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-600 transition-colors">
+                            <i class="fas fa-users"></i>
+                            <span>Speakers</span>
+                        </a>
+                        <a href="#feedback"
+                            class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-600 transition-colors">
+                            <i class="fas fa-comment-alt"></i>
+                            <span>Feedback</span>
+                        </a>
+                        <a href="#certificates"
+                            class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-600 transition-colors">
+                            <i class="fas fa-certificate"></i>
+                            <span>Certificates</span>
+                        </a>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="flex-1">
+                <!-- Submissions Section -->
+                <section id="submissions" class="dashboard-section">
+                    <div class="bg-white rounded-lg shadow-sm p-6">
+                        <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+                            <h2 class="text-2xl font-bold text-gray-800 mb-4 md:mb-0">Session Submissions</h2>
+                            <div class="flex flex-wrap gap-4 w-full md:w-auto">
+                                <select id="track-filter"
+                                    class="filter-input px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="">All Tracks</option>
+                                    <option value="Technical">Technical</option>
+                                    <option value="Business">Business</option>
+                                    <option value="Design">Design</option>
+                                </select>
+                                <select id="status-filter"
+                                    class="filter-input px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="">All Status</option>
+                                    <option value="submitted">Submitted</option>
+                                    <option value="approved">Approved</option>
+                                    <option value="rejected">Rejected</option>
+                                    <option value="hold">Hold</option>
+                                </select>
+                                <div class="relative">
+                                    <input type="text" id="search-input" placeholder="Search submissions..."
+                                        class="filter-input pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <i
+                                        class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="submissions-list" class="space-y-6">
+                            {% for submission in submissions %}
+                            <div
+                                class="bg-white rounded-lg shadow-sm p-6 transform hover:scale-[1.02] transition-transform">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="text-xl font-semibold text-gray-800">{{ submission.title }}</h3>
+                                    <span class="px-3 py-1 rounded-full text-sm 
+                                        {% if submission.status == 'approved' %}bg-green-100 text-green-800
+                                        {% elif submission.status == 'submitted' %}bg-blue-100 text-blue-800
+                                        {% elif submission.status == 'rejected' %}bg-red-100 text-red-800
+                                        {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                        {{ submission.status|title }}
+                                    </span>
+                                </div>
+                                <p class="text-gray-600 mb-4">{{ submission.abstract[:200] }}...</p>
+                                <div class="flex flex-wrap gap-4 text-sm text-gray-500 mb-4">
+                                    <span class="flex items-center">
+                                        <i class="fas fa-user mr-2"></i>{{ submission.speaker.full_name }}
+                                    </span>
+                                    <span class="flex items-center">
+                                        <i class="fas fa-tag mr-2"></i>{{ submission.track }}
+                                    </span>
+                                </div>
+                                <div class="flex flex-wrap items-center justify-end space-x-3">
+                                    {% if submission.status in ['submitted', 'pending'] %}
+                                    <button data-action="approve"
+                                        class="text-white bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg transition-colors">
+                                        <i class="fas fa-check mr-2"></i>Approve
+                                    </button>
+                                    <button data-action="reject"
+                                        class="text-white bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg transition-colors">
+                                        <i class="fas fa-times mr-2"></i>Reject
+                                    </button>
+                                    <button data-action="hold"
+                                        class="text-white bg-yellow-500 hover:bg-yellow-600 px-4 py-2 rounded-lg transition-colors">
+                                        <i class="fas fa-pause mr-2"></i>Hold
+                                    </button>
+                                    {% endif %}
+                                    <button data-action="view"
+                                        class="text-gray-600 hover:text-blue-600 transition-colors">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Agenda Builder Section -->
+                <section id="agenda" class="dashboard-section hidden">
+                    <div class="bg-white rounded-lg shadow-sm p-6">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">Agenda Builder</h2>
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <!-- Available Sessions -->
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h3 class="text-lg font-semibold mb-4">Available Sessions</h3>
+                                <div class="space-y-4">
+                                    {% for session in submissions|selectattr('status', 'equalto',
+                                    'approved')|rejectattr('timeslot') %}
+                                    <div class="draggable-session bg-white p-4 rounded-lg shadow-sm cursor-move"
+                                        draggable="true" data-id="{{ session.id }}">
+                                        <h4 class="font-semibold">{{ session.title }}</h4>
+                                        <span class="text-sm text-gray-500">{{ session.track }}</span>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <!-- Timeline -->
+                            <div class="lg:col-span-2">
+                                <div class="space-y-4">
+                                    {% for timeslot in timeslots %}
+                                    <div class="time-slot bg-gray-50 p-4 rounded-lg" data-timeslot="{{ timeslot }}">
+                                        <h4 class="font-semibold text-gray-700 mb-2">{{ timeslot }}</h4>
+                                        {% for session in submissions|selectattr('timeslot', 'equalto', timeslot) %}
+                                        <div class="bg-white p-4 rounded-lg shadow-sm mb-2">
+                                            <h5 class="font-semibold">{{ session.title }}</h5>
+                                            <span class="text-sm text-gray-500">{{ session.track }}</span>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Communications Section -->
+                <section id="communications" class="dashboard-section hidden">
+                    <div class="bg-white rounded-lg shadow-sm p-6">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">Communications</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h3 class="text-lg font-semibold mb-4">Email Templates</h3>
+                                <div class="space-y-4">
+                                    <!-- Add email template selection and editing interface -->
+                                </div>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h3 class="text-lg font-semibold mb-4">Message Center</h3>
+                                <!-- Add communication history and new message interface -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Speakers Section -->
+                <section id="speakers" class="dashboard-section hidden">
+                    <div class="bg-white rounded-lg shadow-sm p-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-bold text-gray-800">Speakers</h2>
+                            <div class="relative">
+                                <input type="text" id="speaker-search" placeholder="Search speakers..."
+                                    class="pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <i
+                                    class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {% for speaker in speakers %}
+                            <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
+                                        <i class="fas fa-user text-gray-500"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-gray-800">{{ speaker.full_name }}</h3>
+                                        <p class="text-sm text-gray-500">{{ speaker.track }}</p>
+                                    </div>
+                                </div>
+                                <div class="mt-4 text-sm text-gray-600">
+                                    <p class="flex items-center"><i class="fas fa-envelope w-5 mr-2"></i>{{
+                                        speaker.email }}</p>
+                                    <p class="flex items-center"><i class="fas fa-phone w-5 mr-2"></i>{{ speaker.mobile
+                                        }}</p>
+                                </div>
+                                <div class="mt-4 flex justify-end space-x-2">
+                                    <button class="text-blue-600 hover:text-blue-800">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="text-blue-600 hover:text-blue-800">
+                                        <i class="fas fa-envelope"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Feedback Section -->
+                <section id="feedback" class="dashboard-section hidden">
+                    <div class="bg-white rounded-lg shadow-sm p-6">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">Feedback Management</h2>
+                        <!-- Add feedback management interface -->
+                    </div>
+                </section>
+
+                <!-- Certificates Section -->
+                <section id="certificates" class="dashboard-section hidden">
+                    <div class="bg-white rounded-lg shadow-sm p-6">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">Certificates</h2>
+                        <!-- Add certificate management interface -->
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/manager_dashboard.js') }}"></script>
+{% endblock %}

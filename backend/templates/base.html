@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %} - Speaker Persona</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body class="font-[Poppins] bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-lg">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-4">
+                    <a href="{{ url_for('index') }}"
+                        class="text-2xl font-bold hover:text-blue-200 transition duration-300">
+                        <i class="fas fa-microphone-alt mr-2"></i>Speaker Persona
+                    </a>
+                </div>
+                <div class="hidden md:flex items-center space-x-6">
+                    {% if current_user.is_authenticated %}
+                    {% if current_user.role == 'speaker' %}
+                    <a href="{{ url_for('speaker.dashboard') }}" class="hover:text-blue-200 transition duration-300">
+                        <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('manager.dashboard') }}" class="hover:text-blue-200 transition duration-300">
+                        <i class="fas fa-tasks mr-2"></i>Manager Dashboard
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('auth.logout') }}"
+                        class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg transition duration-300">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="hover:text-blue-200 transition duration-300">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Login
+                    </a>
+                    <a href="{{ url_for('auth.register') }}"
+                        class="bg-white text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-lg transition duration-300">
+                        <i class="fas fa-user-plus mr-2"></i>Register
+                    </a>
+                    {% endif %}
+                </div>
+                <!-- Mobile menu button -->
+                <button class="md:hidden text-white focus:outline-none" id="mobile-menu-button">
+                    <i class="fas fa-bars text-2xl"></i>
+                </button>
+            </div>
+            <!-- Mobile menu -->
+            <div class="md:hidden hidden" id="mobile-menu">
+                <div class="py-4 space-y-4">
+                    {% if current_user.is_authenticated %}
+                    {% if current_user.role == 'speaker' %}
+                    <a href="{{ url_for('speaker.dashboard') }}"
+                        class="block hover:text-blue-200 transition duration-300">
+                        <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('manager.dashboard') }}"
+                        class="block hover:text-blue-200 transition duration-300">
+                        <i class="fas fa-tasks mr-2"></i>Manager Dashboard
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('auth.logout') }}" class="block hover:text-blue-200 transition duration-300">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="block hover:text-blue-200 transition duration-300">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Login
+                    </a>
+                    <a href="{{ url_for('auth.register') }}" class="block hover:text-blue-200 transition duration-300">
+                        <i class="fas fa-user-plus mr-2"></i>Register
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="container mx-auto px-4 mt-4">
+        {% for category, message in messages %}
+        <div
+            class="alert alert-{{ category }} bg-{{ category == 'error' and 'red' or 'green' }}-100 border-l-4 border-{{ category == 'error' and 'red' or 'green' }}-500 text-{{ category == 'error' and 'red' or 'green' }}-700 p-4 mb-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    {% if category == 'error' %}
+                    <i class="fas fa-exclamation-circle"></i>
+                    {% else %}
+                    <i class="fas fa-check-circle"></i>
+                    {% endif %}
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm">{{ message }}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white mt-12">
+        <div class="container mx-auto px-4 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Speaker Persona</h3>
+                    <p class="text-gray-400">Streamline your event management and speaker coordination with our
+                        comprehensive platform.</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Quick Links</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">About Us</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Contact</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">FAQ</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Privacy
+                                Policy</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Connect With Us</h3>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white transition duration-300">
+                            <i class="fab fa-twitter text-2xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition duration-300">
+                            <i class="fab fa-linkedin text-2xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition duration-300">
+                            <i class="fab fa-github text-2xl"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; 2025 Speaker Persona. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-button').addEventListener('click', function () {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        });
+
+        // Auto-hide flash messages
+        setTimeout(function () {
+            $('.alert').fadeOut('slow');
+        }, 5000);
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

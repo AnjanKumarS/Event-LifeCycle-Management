@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <h2>Speaker Registration</h2>
+    <form method="POST" action="{{ url_for('auth.register') }}">
+        <div class="form-group">
+            <label for="full_name">Full Name *</label>
+            <input type="text" id="full_name" name="full_name" required>
+        </div>
+
+        <div class="form-group">
+            <label for="email">Email Address *</label>
+            <input type="email" id="email" name="email" required>
+        </div>
+
+        <div class="form-group">
+            <label for="mobile">Mobile Number *</label>
+            <input type="text" id="mobile" name="mobile" required>
+        </div>
+
+        <div class="form-group">
+            <label for="track">Track</label>
+            <input type="text" id="track" name="track">
+        </div>
+
+        <div class="form-group">
+            <label for="category">Session Category</label>
+            <select id="category" name="category">
+                <option value="Master Class">Master Class</option>
+                <option value="Demo Pod">Demo Pod</option>
+                <option value="Talk">Talk</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="tshirt_size">T-shirt Size</label>
+            <select id="tshirt_size" name="tshirt_size">
+                <option value="S">S</option>
+                <option value="M">M</option>
+                <option value="L">L</option>
+                <option value="XL">XL</option>
+            </select>
+        </div>
+
+        <!-- Co-speaker Information -->
+        <h3>Co-speaker Information (Optional)</h3>
+        <div class="form-group">
+            <label for="speaker2_name">Co-speaker Name</label>
+            <input type="text" id="speaker2_name" name="speaker2_name">
+        </div>
+
+        <div class="form-group">
+            <label for="speaker2_email">Co-speaker Email</label>
+            <input type="email" id="speaker2_email" name="speaker2_email">
+        </div>
+
+        <div class="form-group">
+            <label for="speaker2_tshirt_size">Co-speaker T-shirt Size</label>
+            <select id="speaker2_tshirt_size" name="speaker2_tshirt_size">
+                <option value="">Select Size</option>
+                <option value="S">S</option>
+                <option value="M">M</option>
+                <option value="L">L</option>
+                <option value="XL">XL</option>
+            </select>
+        </div>
+
+        <!-- Additional Information -->
+        <h3>Additional Information</h3>
+        <div class="form-group">
+            <label for="food_choice">Food Choice *</label>
+            <select id="food_choice" name="food_choice" required>
+                <option value="Veg">Veg</option>
+                <option value="Non-Veg">Non-Veg</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="blood_group">Blood Group</label>
+            <input type="text" id="blood_group" name="blood_group">
+        </div>
+
+        <div class="form-group">
+            <label for="emergency_contact_name">Emergency Contact Name</label>
+            <input type="text" id="emergency_contact_name" name="emergency_contact_name">
+        </div>
+
+        <div class="form-group">
+            <label for="emergency_contact_number">Emergency Contact Number</label>
+            <input type="text" id="emergency_contact_number" name="emergency_contact_number">
+        </div>
+
+        <div class="form-group">
+            <label for="linkedin_url">LinkedIn Profile URL</label>
+            <input type="url" id="linkedin_url" name="linkedin_url">
+        </div>
+
+        <div class="form-group">
+            <label for="sap_community_url">SAP Community URL</label>
+            <input type="url" id="sap_community_url" name="sap_community_url">
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password *</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Register</button>
+    </form>
+    <p class="auth-links">
+        Already have an account? <a href="{{ url_for('auth.login') }}">Login</a>
+    </p>
+</div>
+{% endblock %}

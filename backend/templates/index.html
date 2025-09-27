@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-3xl shadow-2xl overflow-hidden">
+    <div class="container mx-auto px-4 py-16">
+        <div class="grid md:grid-cols-2 gap-8 items-center">
+            <div class="text-center md:text-left">
+                <h1 class="text-4xl md:text-5xl font-bold mb-6">Streamline Your Event Management</h1>
+                <p class="text-xl mb-8">Connect speakers and event managers seamlessly with our comprehensive platform.
+                </p>
+                <div class="space-x-4">
+                    <a href="{{ url_for('auth.register') }}"
+                        class="bg-white text-blue-600 hover:bg-blue-50 px-8 py-3 rounded-lg font-semibold transition duration-300 inline-block">
+                        Get Started
+                    </a>
+                    <a href="#features"
+                        class="bg-transparent border-2 border-white hover:bg-white hover:text-blue-600 px-8 py-3 rounded-lg font-semibold transition duration-300 inline-block">
+                        Learn More
+                    </a>
+                </div>
+            </div>
+            <div class="hidden md:block">
+                <img src="{{ url_for('static', filename='images/hero-image.svg') }}" alt="Event Management"
+                    class="w-full">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<section id="features" class="py-16">
+    <div class="text-center mb-12">
+        <h2 class="text-3xl font-bold mb-4">Why Choose Speaker Persona?</h2>
+        <p class="text-gray-600 max-w-2xl mx-auto">Our platform offers comprehensive tools for both speakers and event
+            managers.</p>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-8">
+        <!-- Speaker Features -->
+        <div class="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition duration-300">
+            <div class="bg-blue-100 text-blue-600 w-12 h-12 rounded-full flex items-center justify-center mb-4 mx-auto">
+                <i class="fas fa-microphone text-xl"></i>
+            </div>
+            <h3 class="text-xl font-semibold mb-4 text-center">For Speakers</h3>
+            <ul class="space-y-3 text-gray-600">
+                <li class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    Submit and manage sessions
+                </li>
+                <li class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    Upload presentation materials
+                </li>
+                <li class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    Track session status
+                </li>
+                <li class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    Download certificates
+                </li>
+            </ul>
+        </div>
+
+        <!-- Event Manager Features -->
+        <div class="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition duration-300">
+            <div
+                class="bg-indigo-100 text-indigo-600 w-12 h-12 rounded-full flex items-center justify-center mb-4 mx-auto">
+                <i class="fas fa-tasks text-xl"></i>
+            </div>
+            <h3 class="text-xl font-semibold mb-4 text-center">For Event Managers</h3>
+            <ul class="space-y-3 text-gray-600">
+                <li class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    Review submissions
+                </li>
+                <li class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    Build dynamic agenda
+                </li>
+                <li class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    Manage communications
+                </li>
+                <li class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    Handle feedback
+                </li>
+            </ul>
+        </div>
+
+        <!-- Platform Features -->
+        <div class="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition duration-300">
+            <div
+                class="bg-purple-100 text-purple-600 w-12 h-12 rounded-full flex items-center justify-center mb-4 mx-auto">
+                <i class="fas fa-magic text-xl"></i>
+            </div>
+            <h3 class="text-xl font-semibold mb-4 text-center">Smart Features</h3>
+            <ul class="space-y-3 text-gray-600">
+                <li class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    AI-powered scheduling
+                </li>
+                <li class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    Automated notifications
+                </li>
+                <li class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    QR code integration
+                </li>
+                <li class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    Real-time analytics
+                </li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<!-- Statistics Section -->
+<section class="bg-gray-100 py-16">
+    <div class="container mx-auto px-4">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div class="text-center">
+                <div class="text-4xl font-bold text-blue-600 mb-2">500+</div>
+                <div class="text-gray-600">Active Speakers</div>
+            </div>
+            <div class="text-center">
+                <div class="text-4xl font-bold text-blue-600 mb-2">50+</div>
+                <div class="text-gray-600">Events Managed</div>
+            </div>
+            <div class="text-center">
+                <div class="text-4xl font-bold text-blue-600 mb-2">1000+</div>
+                <div class="text-gray-600">Sessions Conducted</div>
+            </div>
+            <div class="text-center">
+                <div class="text-4xl font-bold text-blue-600 mb-2">98%</div>
+                <div class="text-gray-600">Satisfaction Rate</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action -->
+<section class="py-16">
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-3xl shadow-2xl overflow-hidden">
+        <div class="container mx-auto px-4 py-12 text-center text-white">
+            <h2 class="text-3xl font-bold mb-6">Ready to Transform Your Event Management?</h2>
+            <p class="text-xl mb-8 max-w-2xl mx-auto">Join our platform and experience seamless speaker and event
+                coordination.</p>
+            <a href="{{ url_for('auth.register') }}"
+                class="bg-white text-blue-600 hover:bg-blue-50 px-8 py-3 rounded-lg font-semibold transition duration-300 inline-block">
+                Register Now
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}

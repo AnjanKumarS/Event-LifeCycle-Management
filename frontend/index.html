@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speaker Persona App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Speaker Persona App</h1>
+        <div id="login-section">
+            <h2>Login</h2>
+            <form id="login-form">
+                <input type="email" id="email" placeholder="Email" required>
+                <input type="password" id="password" placeholder="Password" required>
+                <select id="role">
+                    <option value="speaker">Speaker</option>
+                    <option value="manager">Event Manager</option>
+                </select>
+                <button type="submit">Login</button>
+            </form>
+            <button id="show-register">Register as Speaker</button>
+        </div>
+        <div id="register-section" style="display:none;">
+            <h2>Speaker Registration</h2>
+            <form id="register-form">
+                <input type="text" id="full_name" placeholder="Full Name" required>
+                <input type="email" id="reg_email" placeholder="Email Address" required>
+                <input type="text" id="mobile" placeholder="Mobile Number" required>
+                <input type="text" id="track" placeholder="Track">
+                <select id="category">
+                    <option value="Master Class">Master Class</option>
+                    <option value="Demo Pod">Demo Pod</option>
+                    <option value="Talk">Talk</option>
+                </select>
+                <select id="tshirt_size">
+                    <option value="S">S</option>
+                    <option value="M">M</option>
+                    <option value="L">L</option>
+                    <option value="XL">XL</option>
+                </select>
+                <input type="text" id="speaker2_name" placeholder="Speaker 2 Name">
+                <input type="email" id="speaker2_email" placeholder="Speaker 2 Email">
+                <select id="speaker2_tshirt_size">
+                    <option value="">T-shirt Size</option>
+                    <option value="S">S</option>
+                    <option value="M">M</option>
+                    <option value="L">L</option>
+                    <option value="XL">XL</option>
+                </select>
+                <select id="food_choice" required>
+                    <option value="Veg">Veg</option>
+                    <option value="Non-Veg">Non-Veg</option>
+                </select>
+                <input type="text" id="blood_group" placeholder="Blood Group">
+                <input type="text" id="emergency_contact_name" placeholder="Emergency Contact Name">
+                <input type="text" id="emergency_contact_number" placeholder="Emergency Contact Number">
+                <input type="url" id="linkedin_url" placeholder="LinkedIn Profile URL">
+                <input type="url" id="sap_community_url" placeholder="SAP Community URL">
+                <input type="password" id="reg_password" placeholder="Password" required>
+                <button type="submit">Register</button>
+            </form>
+            <button id="show-login">Back to Login</button>
+        </div>
+    </div>
+    <script src="main.js"></script>
+</body>
+
+</html>

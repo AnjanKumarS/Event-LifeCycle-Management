@@ -1,0 +1,509 @@
+{% extends "base.html" %}
+
+{% block title %}Speaker Dashboard{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
+<style>
+    .section-transition {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+
+    .section-transition.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .stat-card {
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    .nav-link {
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    .nav-link::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 50%;
+        width: 0;
+        height: 2px;
+        background: currentColor;
+        transition: all 0.3s ease;
+        transform: translateX(-50%);
+    }
+
+    .nav-link:hover::after,
+    .nav-link.active::after {
+        width: 100%;
+    }
+
+    .session-card {
+        transition: all 0.3s ease;
+    }
+
+    .session-card:hover {
+        transform: translateY(-5px) scale(1.01);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    .button-effect {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .button-effect::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: width 0.5s ease, height 0.5s ease;
+    }
+
+    .button-effect:active::after {
+        width: 200%;
+        height: 200%;
+        opacity: 0;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateX(-20px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    .fade-in {
+        animation: fadeIn 0.5s ease forwards;
+    }
+
+    .slide-in {
+        animation: slideIn 0.3s ease forwards;
+    }
+
+    .loading {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .loading::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        background: linear-gradient(90deg,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.4) 50%,
+                rgba(255, 255, 255, 0) 100%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite linear;
+    }
+
+    @keyframes shimmer {
+        0% {
+            background-position: -200% 0;
+        }
+
+        100% {
+            background-position: 200% 0;
+        }
+    }
+
+    .progress-bar {
+        height: 4px;
+        background: #f0f0f0;
+        border-radius: 2px;
+        overflow: hidden;
+    }
+
+    .progress-bar-fill {
+        height: 100%;
+        background: #3b82f6;
+        transition: width 0.3s ease;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bg-gray-50 min-h-screen">
+    <!-- Top Stats Bar -->
+    <div class="bg-white shadow-sm">
+        <div class="container mx-auto px-4 py-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 text-white">
+                    <div class="flex items-center">
+                        <div class="rounded-full bg-blue-400 bg-opacity-30 p-3">
+                            <i class="fas fa-microphone-alt text-2xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h4 class="text-lg font-semibold">Total Sessions</h4>
+                            <p class="text-2xl font-bold">{{ sessions|length }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-4 text-white">
+                    <div class="flex items-center">
+                        <div class="rounded-full bg-green-400 bg-opacity-30 p-3">
+                            <i class="fas fa-check-circle text-2xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h4 class="text-lg font-semibold">Approved</h4>
+                            <p class="text-2xl font-bold">{{ sessions|selectattr('status', 'equalto',
+                                'approved')|list|length }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-lg p-4 text-white">
+                    <div class="flex items-center">
+                        <div class="rounded-full bg-yellow-400 bg-opacity-30 p-3">
+                            <i class="fas fa-clock text-2xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h4 class="text-lg font-semibold">Pending</h4>
+                            <p class="text-2xl font-bold">{{ sessions|selectattr('status', 'equalto',
+                                'pending')|list|length }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-4 text-white">
+                    <div class="flex items-center">
+                        <div class="rounded-full bg-purple-400 bg-opacity-30 p-3">
+                            <i class="fas fa-certificate text-2xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h4 class="text-lg font-semibold">Certificates</h4>
+                            <p class="text-2xl font-bold">{{ certificates|length }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8">
+        <div class="flex flex-col md:flex-row gap-6">
+            <!-- Sidebar -->
+            <div class="w-full md:w-64 bg-white rounded-lg shadow-sm">
+                <div class="p-4">
+                    <div class="flex items-center space-x-4 mb-6">
+                        <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                            <i class="fas fa-user text-blue-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800">{{ current_user.full_name }}</h3>
+                            <p class="text-sm text-gray-500">Speaker</p>
+                        </div>
+                    </div>
+                    <nav class="space-y-2">
+                        <a href="#sessions"
+                            class="flex items-center space-x-3 px-4 py-3 rounded-lg bg-blue-50 text-blue-600">
+                            <i class="fas fa-microphone-alt"></i>
+                            <span>My Sessions</span>
+                        </a>
+                        <a href="#documents"
+                            class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-600 transition-colors">
+                            <i class="fas fa-file-alt"></i>
+                            <span>Documents</span>
+                        </a>
+                        <a href="#agenda"
+                            class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-600 transition-colors">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Event Agenda</span>
+                        </a>
+                        <a href="#qrcodes"
+                            class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-600 transition-colors">
+                            <i class="fas fa-qrcode"></i>
+                            <span>QR Codes</span>
+                        </a>
+                        <a href="#certificates"
+                            class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-600 transition-colors">
+                            <i class="fas fa-certificate"></i>
+                            <span>Certificates</span>
+                        </a>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="flex-1">
+                <!-- Sessions Section -->
+                <section id="sessions" class="mb-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">My Sessions</h2>
+                        <button id="new-session-btn"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
+                            <i class="fas fa-plus"></i>
+                            <span>New Session</span>
+                        </button>
+                    </div>
+
+                    <div class="grid gap-6">
+                        {% for session in sessions %}
+                        <div
+                            class="bg-white rounded-lg shadow-sm p-6 transform hover:scale-[1.02] transition-transform">
+                            <div class="flex justify-between items-start mb-4">
+                                <h3 class="text-xl font-semibold text-gray-800">{{ session.title }}</h3>
+                                <span class="px-3 py-1 rounded-full text-sm 
+                                    {% if session.status == 'approved' %}bg-green-100 text-green-800
+                                    {% elif session.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                    {% else %}bg-red-100 text-red-800{% endif %}">
+                                    {{ session.status|title }}
+                                </span>
+                            </div>
+                            <p class="text-gray-600 mb-4">{{ session.abstract[:200] }}...</p>
+                            <div class="flex flex-wrap gap-4 text-sm text-gray-500 mb-4">
+                                <span class="flex items-center">
+                                    <i class="fas fa-tag mr-2"></i>{{ session.track }}
+                                </span>
+                                <span class="flex items-center">
+                                    <i class="fas fa-calendar mr-2"></i>{{ session.category }}
+                                </span>
+                                {% if session.timeslot %}
+                                <span class="flex items-center">
+                                    <i class="fas fa-clock mr-2"></i>{{ session.timeslot }}
+                                </span>
+                                {% endif %}
+                            </div>
+                            <div class="flex items-center justify-end space-x-3">
+                                <button class="text-gray-600 hover:text-blue-600 transition-colors">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="text-gray-600 hover:text-blue-600 transition-colors">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                {% if session.status == 'approved' %}
+                                <button class="text-gray-600 hover:text-green-600 transition-colors">
+                                    <i class="fas fa-file-upload"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </section>
+
+                <!-- Documents Section -->
+                <section id="documents" class="dashboard-section hidden">
+                    <div class="bg-white rounded-lg shadow-sm p-6">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">Session Documents</h2>
+                        <div class="space-y-6">
+                            {% for session in sessions|selectattr('status', 'equalto', 'approved') %}
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-4">{{ session.title }}</h3>
+                                <div class="space-y-4">
+                                    <div class="flex items-center justify-between bg-white p-4 rounded-lg">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-file-powerpoint text-blue-500 text-xl"></i>
+                                            <div>
+                                                <p class="font-medium text-gray-800">Presentation</p>
+                                                <p class="text-sm text-gray-500">Upload your presentation slides</p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                            Upload
+                                        </button>
+                                    </div>
+                                    <div class="flex items-center justify-between bg-white p-4 rounded-lg">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-file-code text-green-500 text-xl"></i>
+                                            <div>
+                                                <p class="font-medium text-gray-800">Demo Files</p>
+                                                <p class="text-sm text-gray-500">Upload any demo or example files</p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                            Upload
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Agenda Section -->
+                <section id="agenda" class="dashboard-section hidden">
+                    <div class="bg-white rounded-lg shadow-sm p-6">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">Event Agenda</h2>
+                        <div class="space-y-6">
+                            {% for session in sessions|selectattr('status', 'equalto', 'approved') %}
+                            {% if session.timeslot %}
+                            <div class="flex items-center space-x-4 bg-gray-50 p-4 rounded-lg">
+                                <div class="bg-blue-100 text-blue-600 rounded-lg p-3">
+                                    <i class="fas fa-clock text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-gray-800">{{ session.title }}</h3>
+                                    <p class="text-sm text-gray-500">{{ session.timeslot }} - {{ session.track }}</p>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </section>
+
+                <!-- QR Codes Section -->
+                <section id="qrcodes" class="dashboard-section hidden">
+                    <div class="bg-white rounded-lg shadow-sm p-6">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">My QR Codes</h2>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div class="bg-gray-50 p-6 rounded-lg text-center">
+                                <div class="mb-4">
+                                    <!-- QR Code for Check-in -->
+                                    <img src="{{ url_for('static', filename='qrcodes/checkin_' + current_user.id|string + '.png') }}"
+                                        alt="Check-in QR Code" class="mx-auto">
+                                </div>
+                                <h3 class="text-lg font-semibold text-gray-800">Check-in QR Code</h3>
+                                <p class="text-sm text-gray-500">Use this for event check-in</p>
+                            </div>
+                            <div class="bg-gray-50 p-6 rounded-lg text-center">
+                                <div class="mb-4">
+                                    <!-- QR Code for T-shirt -->
+                                    <img src="{{ url_for('static', filename='qrcodes/tshirt_' + current_user.id|string + '.png') }}"
+                                        alt="T-shirt QR Code" class="mx-auto">
+                                </div>
+                                <h3 class="text-lg font-semibold text-gray-800">T-shirt Collection QR Code</h3>
+                                <p class="text-sm text-gray-500">Use this to collect your t-shirt</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Certificates Section -->
+                <section id="certificates" class="dashboard-section hidden">
+                    <div class="bg-white rounded-lg shadow-sm p-6">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">My Certificates</h2>
+                        <div class="grid gap-6">
+                            {% for certificate in certificates %}
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-4">
+                                        <div class="bg-purple-100 text-purple-600 p-3 rounded-lg">
+                                            <i class="fas fa-certificate text-xl"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="font-semibold text-gray-800">Speaker Certificate</h3>
+                                            <p class="text-sm text-gray-500">Issued on {{ certificate.created_at|date }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <a href="{{ url_for('static', filename=certificate.image_path) }}"
+                                        class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors"
+                                        download>
+                                        <i class="fas fa-download mr-2"></i>Download
+                                    </a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </section>
+
+                <!-- New Session Modal -->
+                <div id="new-session-modal"
+                    class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
+                    <div class="bg-white rounded-lg w-full max-w-2xl p-6 transform transition-transform">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-2xl font-bold text-gray-800">Submit New Session</h3>
+                            <button class="text-gray-400 hover:text-gray-600" onclick="closeModal()">
+                                <i class="fas fa-times text-xl"></i>
+                            </button>
+                        </div>
+                        <form id="new-session-form" class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Session Title</label>
+                                <input type="text" name="title"
+                                    class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Abstract</label>
+                                <textarea name="abstract" rows="4"
+                                    class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    required></textarea>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                                    <select name="category"
+                                        class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        required>
+                                        <option value="Master Class">Master Class</option>
+                                        <option value="Demo Pod">Demo Pod</option>
+                                        <option value="Talk">Talk</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Track</label>
+                                    <select name="track"
+                                        class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        required>
+                                        <option value="Technical">Technical</option>
+                                        <option value="Business">Business</option>
+                                        <option value="Design">Design</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="flex justify-end space-x-3">
+                                <button type="button" onclick="closeModal()"
+                                    class="px-4 py-2 border rounded-lg text-gray-600 hover:bg-gray-50 transition-colors">
+                                    Cancel
+                                </button>
+                                <button type="submit"
+                                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                    Submit Session
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="{{ url_for('static', filename='js/speaker_dashboard.js') }}"></script>
+{% endblock %}
